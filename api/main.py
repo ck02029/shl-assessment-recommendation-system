@@ -58,46 +58,193 @@ query_parser = None
 
 def fetch_text_from_url(url: str) -> str:
     """
-    Fetch and extract text content from a URL (for JD URLs)
+    Fetch and extract text content from any URL
+    Universal extraction that works with any website structure
     
     Args:
-        url: URL to fetch content from
+        url: URL to fetch content from (any website, job board, document, etc.)
         
     Returns:
         Extracted text content
     """
     try:
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept-Encoding': 'gzip, deflate',
+            'Connection': 'keep-alive',
+            'Referer': 'https://www.google.com/',
         }
-        response = requests.get(url, headers=headers, timeout=30)
+        
+        response = requests.get(url, headers=headers, timeout=30, allow_redirects=True)
         response.raise_for_status()
+        
+        # Check content type
+        content_type = response.headers.get('Content-Type', '').lower()
+        
+        # Handle plain text
+        if 'text/plain' in content_type:
+            text = response.text.strip()
+            if len(text) > 50:
+                logger.info(f"Extracted {len(text)} characters (plain text) from URL: {url}")
+                return text
+        
+        # Handle HTML content
+        if 'text/html' not in content_type and 'application/xhtml' not in content_type:
+            # Try to parse as HTML anyway (some sites don't set content-type correctly)
+            pass
         
         soup = BeautifulSoup(response.content, 'html.parser')
         
-        # Remove script and style elements
-        for script in soup(["script", "style", "nav", "header", "footer"]):
-            script.decompose()
+        # Remove unwanted elements that don't contain meaningful content
+        unwanted_tags = ["script", "style", "nav", "header", "footer", "aside", "noscript", 
+                        "iframe", "embed", "object", "form", "button", "input", "select",
+                        "meta", "link", "base", "svg", "canvas"]
+        for tag in unwanted_tags:
+            for element in soup.find_all(tag):
+                element.decompose()
         
-        # Extract text from main content areas
-        main_content = soup.find(['main', 'article', 'div'], class_=lambda x: x and ('content' in x.lower() or 'job' in x.lower() or 'description' in x.lower()))
-        if main_content:
-            text = main_content.get_text(separator=' ', strip=True)
+        # Remove elements with common non-content classes/ids
+        non_content_patterns = [
+            'nav', 'navigation', 'menu', 'sidebar', 'footer', 'header', 
+            'ad', 'advertisement', 'banner', 'cookie', 'popup', 'modal',
+            'social', 'share', 'comment', 'related', 'recommended'
+        ]
+        for pattern in non_content_patterns:
+            for elem in soup.find_all(class_=lambda x: x and pattern in str(x).lower()):
+                elem.decompose()
+            for elem in soup.find_all(id=lambda x: x and pattern in str(x).lower()):
+                elem.decompose()
+        
+        text_parts = []
+        
+        # Strategy 1: Look for semantic HTML5 elements (best content)
+        semantic_elements = soup.find_all(['main', 'article', 'section'])
+        for elem in semantic_elements:
+            text = elem.get_text(separator=' ', strip=True)
+            # Filter out very short or likely navigation content
+            if len(text) > 200 and not any(skip in text.lower()[:100] for skip in ['skip to', 'menu', 'navigation']):
+                text_parts.append(text)
+        
+        # Strategy 2: Look for content containers with common patterns
+        if not text_parts:
+            content_keywords = [
+                'content', 'main', 'article', 'post', 'entry', 'body', 
+                'description', 'detail', 'text', 'copy', 'story', 'page'
+            ]
+            
+            for keyword in content_keywords:
+                # Search by class
+                elements = soup.find_all(['div', 'section'], 
+                    class_=lambda x: x and keyword in str(x).lower())
+                for elem in elements:
+                    text = elem.get_text(separator=' ', strip=True)
+                    if len(text) > 200:
+                        text_parts.append(text)
+                        break
+                
+                # Search by id
+                elem = soup.find(id=lambda x: x and keyword in str(x).lower())
+                if elem:
+                    text = elem.get_text(separator=' ', strip=True)
+                    if len(text) > 200:
+                        text_parts.append(text)
+                        break
+                
+                if text_parts:
+                    break
+        
+        # Strategy 3: Look for paragraphs and divs with substantial text
+        if not text_parts:
+            # Find all paragraphs and divs, sort by length
+            all_text_elements = soup.find_all(['p', 'div', 'section'])
+            text_elements = []
+            for elem in all_text_elements:
+                text = elem.get_text(separator=' ', strip=True)
+                # Skip if too short or looks like navigation/menu
+                if len(text) > 100 and not any(skip in text.lower()[:50] for skip in 
+                    ['home', 'about', 'contact', 'login', 'sign up', 'menu', 'search']):
+                    text_elements.append((len(text), text))
+            
+            # Sort by length and take top candidates
+            text_elements.sort(reverse=True, key=lambda x: x[0])
+            for _, text in text_elements[:10]:  # Top 10 longest text blocks
+                if len(text) > 200:
+                    text_parts.append(text)
+        
+        # Strategy 4: Fallback - extract from body, removing navigation
+        if not text_parts:
+            body = soup.find('body')
+            if body:
+                # Remove common navigation elements
+                for nav_tag in ['nav', 'header', 'footer', 'aside', 'menu']:
+                    for elem in body.find_all(nav_tag):
+                        elem.decompose()
+                
+                # Get all text from body
+                text = body.get_text(separator=' ', strip=True)
+                if len(text) > 100:
+                    text_parts.append(text)
+        
+        # Combine all text parts, removing duplicates
+        if text_parts:
+            # Remove duplicate or very similar content
+            unique_texts = []
+            seen_texts = set()
+            for text in text_parts:
+                text_hash = hash(text[:500])  # Hash first 500 chars for comparison
+                if text_hash not in seen_texts:
+                    seen_texts.add(text_hash)
+                    unique_texts.append(text)
+            
+            combined_text = ' '.join(unique_texts)
         else:
-            # Fallback: get all text
-            text = soup.get_text(separator=' ', strip=True)
+            # Last resort: get all text from page
+            combined_text = soup.get_text(separator=' ', strip=True)
         
-        # Clean up excessive whitespace
-        text = ' '.join(text.split())
+        # Clean up excessive whitespace and normalize
+        combined_text = ' '.join(combined_text.split())
         
-        logger.info(f"Extracted {len(text)} characters from URL: {url}")
-        return text
+        # Remove very short content
+        if len(combined_text) < 100:
+            raise ValueError(f"Extracted content too short ({len(combined_text)} chars), likely not meaningful content")
         
-    except Exception as e:
-        logger.error(f"Error fetching URL {url}: {str(e)}")
+        # Log extraction stats
+        logger.info(f"Extracted {len(combined_text)} characters from URL: {url}")
+        logger.debug(f"Content preview: {combined_text[:200]}...")
+        
+        return combined_text
+        
+    except requests.exceptions.Timeout:
+        logger.error(f"Timeout fetching URL {url}")
         raise HTTPException(
             status_code=400,
-            detail=f"Failed to fetch content from URL: {str(e)}"
+            detail="Request timed out. The URL might be slow or unreachable. Please try again."
+        )
+    except requests.exceptions.ConnectionError:
+        logger.error(f"Connection error fetching URL {url}")
+        raise HTTPException(
+            status_code=400,
+            detail="Could not connect to the URL. Please check if the URL is correct and accessible."
+        )
+    except requests.exceptions.HTTPError as e:
+        logger.error(f"HTTP error {e.response.status_code} fetching URL {url}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"HTTP error {e.response.status_code}: Could not access the URL. It might require authentication or be unavailable."
+        )
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Network error fetching URL {url}: {str(e)}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Failed to fetch URL: {str(e)}. Please check if the URL is accessible."
+        )
+    except Exception as e:
+        logger.error(f"Error processing URL {url}: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=400,
+            detail=f"Could not extract content from the URL. Error: {str(e)}"
         )
 
 
@@ -161,9 +308,9 @@ class RecommendationResponse(BaseModel):
     query: str = Field(..., description="The original query")
     recommendations: List[Assessment] = Field(
         ...,
-        description="List of recommended assessments (5-10)",
+        description="List of recommended assessments (up to 20)",
         min_items=1,
-        max_items=10
+        max_items=20
     )
 
 
@@ -188,7 +335,7 @@ async def recommend_assessments(request: RecommendationRequest):
     Recommend relevant SHL assessments
     
     Takes a natural language query or job description and returns
-    5-10 most relevant Individual Test Solutions from SHL catalog.
+    up to 20 most relevant Individual Test Solutions from SHL catalog.
     
     Args:
         request: RecommendationRequest with query text
@@ -213,10 +360,10 @@ async def recommend_assessments(request: RecommendationRequest):
         if is_url(query):
             logger.info(f"Detected URL input, fetching content...")
             query = fetch_text_from_url(query)
-            if not query or len(query) < 10:
+            if not query or len(query) < 50:
                 raise HTTPException(
                     status_code=400,
-                    detail="Could not extract meaningful content from the provided URL"
+                    detail="Could not extract meaningful content from the provided URL. Please ensure the URL points to a valid job description page."
                 )
         
         if len(query) < 5:
@@ -294,7 +441,7 @@ async def recommend_assessments(request: RecommendationRequest):
         # Retrieve candidates
         candidates = retriever.retrieve(
             query,
-            k=30,  # Get more candidates for reranking
+            k=50,  # Get more candidates for better reranking
             query_analysis=query_analysis
         )
         logger.info(f"Retrieved {len(candidates)} candidates")
@@ -303,7 +450,7 @@ async def recommend_assessments(request: RecommendationRequest):
         reranked = reranker.rerank(
             query,
             candidates,
-            top_k=10,
+            top_k=20,  # Get top 20 for better recommendations
             query_analysis=query_analysis
         )
         logger.info(f"Reranked to top {len(reranked)} recommendations")
@@ -320,7 +467,7 @@ async def recommend_assessments(request: RecommendationRequest):
         
         # Format response
         recommendations: List[Assessment] = []
-        for result in reranked[:10]:  # Max 10 recommendations
+        for result in reranked[:20]:  # Return up to 20 recommendations
             # Map raw metadata to API response schema, with safe defaults
             adaptive_raw = result.get("adaptive")
             remote_raw = result.get("remote")
