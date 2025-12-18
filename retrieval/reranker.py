@@ -142,10 +142,22 @@ Context from query analysis:
 - Seniority: {query_analysis.get('seniority', 'unspecified')}
 """
         
+        # Extract specific technologies mentioned in query
+        tech_mentions = []
+        tech_keywords = ['c++', 'cpp', 'java', 'python', 'javascript', 'sql', 'c#', '.net', 'ruby', 'go', 'rust']
+        query_lower = query.lower()
+        for tech in tech_keywords:
+            if tech in query_lower:
+                tech_mentions.append(tech)
+        
+        tech_context = ""
+        if tech_mentions:
+            tech_context = f"\nIMPORTANT: The query specifically mentions these technologies: {', '.join(tech_mentions)}. Prioritize assessments that match these EXACT technologies over generic programming assessments."
+        
         prompt = f"""You are an expert in talent assessment. Evaluate and rank these assessments for relevance to the hiring query.
 
 Query: "{query}"
-{context}
+{context}{tech_context}
 
 Assessment Types:
 - K = Knowledge & Technical Skills
@@ -157,9 +169,10 @@ Assessments to evaluate:
 
 Instructions:
 1. Score each assessment 1-10 for relevance
-2. Consider: skill match, test type appropriateness, comprehensiveness
-3. If query needs both technical AND behavioral skills, ensure balanced selection
-4. Return top {top_k} assessments
+2. PRIORITIZE exact technology matches (e.g., if query mentions "C++", prefer C++ assessments over Java/Python)
+3. Consider: skill match, test type appropriateness, comprehensiveness
+4. If query needs both technical AND behavioral skills, ensure balanced selection
+5. Return top {top_k} assessments
 
 Return ONLY a JSON array of indices (0-based) in ranked order:
 [best_index, second_best_index, ...]
@@ -201,13 +214,38 @@ Return ONLY the JSON array of {top_k} indices, no other text."""
         """
         query_lower = query.lower()
         
+        # Extract technologies from query
+        tech_patterns = {
+            'c++': [r'c\+\+', r'cpp', r'cplusplus'],
+            'c#': [r'c#', r'csharp'],
+            '.net': [r'\.net', r'dotnet'],
+            'java': [r'\bjava\b'],
+            'python': [r'\bpython\b'],
+            'javascript': [r'javascript', r'\bjs\b'],
+            'sql': [r'\bsql\b']
+        }
+        
+        query_techs = []
+        for tech, patterns in tech_patterns.items():
+            for pattern in patterns:
+                if re.search(pattern, query_lower, re.IGNORECASE):
+                    query_techs.append(tech)
+                    break
+        
         for candidate in candidates:
             score = candidate.get('retrieval_score', 0.5)
             
+            # High boost for exact technology match
+            candidate_text = f"{candidate['name']} {candidate.get('description', '')}".lower()
+            for tech in query_techs:
+                if tech.lower() in candidate_text:
+                    score += 0.5  # Strong boost for exact tech match
+                    break
+            
             # Boost if name matches query words
             name_lower = candidate['name'].lower()
-            query_words = set(query_lower.split())
-            name_words = set(name_lower.split())
+            query_words = set(re.findall(r'\b\w+\b', query_lower))
+            name_words = set(re.findall(r'\b\w+\b', name_lower))
             word_match = len(query_words & name_words) / max(len(query_words), 1)
             score += word_match * 0.2
             

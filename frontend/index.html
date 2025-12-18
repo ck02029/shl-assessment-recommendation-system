@@ -416,7 +416,21 @@
 
             document.getElementById('queryDisplay').textContent = `"${data.query}"`;
 
-            data.recommendations.forEach((assessment, index) => {
+            // Limit to 10 recommendations
+            const recommendations = data.recommendations.slice(0, 10);
+            
+            // Show message if more recommendations available
+            if (data.recommendations.length > 10) {
+                const infoRow = document.createElement('tr');
+                infoRow.innerHTML = `
+                    <td colspan="3" style="text-align: center; color: #0ea5e9; padding: 10px; font-style: italic;">
+                        Showing top 10 of ${data.recommendations.length} recommendations
+                    </td>
+                `;
+                resultsBody.appendChild(infoRow);
+            }
+            
+            recommendations.forEach((assessment, index) => {
                 const row = document.createElement('tr');
                 const name = assessment.name || assessment.assessment_name || 'Unknown Assessment';
                 const url = assessment.url || assessment.assessment_url || '#';

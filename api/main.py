@@ -308,9 +308,9 @@ class RecommendationResponse(BaseModel):
     query: str = Field(..., description="The original query")
     recommendations: List[Assessment] = Field(
         ...,
-        description="List of recommended assessments (up to 20)",
+        description="List of recommended assessments (5-10)",
         min_items=1,
-        max_items=20
+        max_items=10
     )
 
 
@@ -450,7 +450,7 @@ async def recommend_assessments(request: RecommendationRequest):
         reranked = reranker.rerank(
             query,
             candidates,
-            top_k=20,  # Get top 20 for better recommendations
+            top_k=10,  # Get top 10 recommendations
             query_analysis=query_analysis
         )
         logger.info(f"Reranked to top {len(reranked)} recommendations")
@@ -467,7 +467,7 @@ async def recommend_assessments(request: RecommendationRequest):
         
         # Format response
         recommendations: List[Assessment] = []
-        for result in reranked[:20]:  # Return up to 20 recommendations
+        for result in reranked[:10]:  # Return up to 10 recommendations
             # Map raw metadata to API response schema, with safe defaults
             adaptive_raw = result.get("adaptive")
             remote_raw = result.get("remote")

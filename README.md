@@ -87,7 +87,7 @@ Design a system that recommends relevant SHL assessments based on:
              ▼
 ┌─────────────────────────────────────┐
 │  Final Recommendations              │
-│  (up to 20 assessments)              │
+│  (up to 10 assessments)              │
 │  • Balanced by type                 │
 │  • Ranked by relevance              │
 │  • JSON response                    │
@@ -157,11 +157,11 @@ STEP 4: TYPE BALANCING
 │ Process:                                                           │
 │ 1. Separate candidates by type:                                   │
 │    - Type K: 30 candidates                                         │
-│    - Type P: 20 candidates                                         │
+│    - Type P: 20 candidates (example)                               │
 │                                                                     │
-│ 2. Calculate distribution (target: 20 recommendations):          │
-│    - Type K: 20 × 0.5 = 10 assessments                            │
-│    - Type P: 20 × 0.5 = 10 assessments                             │
+│ 2. Calculate distribution (target: 10 recommendations):          │
+│    - Type K: 10 × 0.5 = 5 assessments                              │
+│    - Type P: 10 × 0.5 = 5 assessments                              │
 │                                                                     │
 │ 3. Select top candidates from each type                            │
 └────────────────────────────────────────────────────────────────────┘
@@ -174,7 +174,7 @@ STEP 5: RERANKING
 │ • Score each candidate for relevance                               │
 │ • Consider: query context, skills match, type fit                │
 │ • Reorder by relevance score                                       │
-│ • Select top 20 final recommendations                             │
+│ • Select top 10 final recommendations                             │
 └────────────────────────────────────────────────────────────────────┘
                             │
                             ▼
@@ -197,7 +197,7 @@ STEP 6: OUTPUT
 │       "description": "...",                                         │
 │       "test_type": ["P"]                                            │
 │     },                                                              │
-│     ... (up to 20 total)                                           │
+│     ... (up to 10 total)                                           │
 │   ]                                                                 │
 │ }                                                                   │
 └────────────────────────────────────────────────────────────────────┘
@@ -280,7 +280,7 @@ STEP 6: OUTPUT
 ### Retrieval Strategy
 - **Initial Retrieval**: Top 50 candidates using FAISS cosine similarity
 - **Balancing**: Type-aware distribution (K/P/C) based on query analysis
-- **Final Count**: Up to 20 recommendations
+- **Final Count**: Up to 10 recommendations
 
 ### Balancing Algorithm
 
@@ -331,7 +331,7 @@ The system implements intelligent balancing when queries require multiple assess
 - **Result**: Mean Recall@10: ~0.75 (on URL-based queries)
 
 ### Final Optimizations
-- Increased recommendations from 10 to 20
+- Final recommendations set to 10 (optimal balance)
 - Enhanced balancing algorithm
 - Improved query parsing accuracy
 - **Final Result**: **Mean Recall@10: ~0.78**
@@ -355,7 +355,7 @@ The system detects required assessment types from:
 - Collaboration/teamwork detected → Type P (Personality & Behavior)
 - Weight distribution: K=0.5, P=0.5
 
-**Recommendations** (10 total):
+**Recommendations** (10 total, balanced):
 - 5 assessments of Type K (Java, Programming, Technical)
 - 5 assessments of Type P (Collaboration, Teamwork, Communication)
 

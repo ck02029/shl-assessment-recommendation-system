@@ -33,7 +33,7 @@ def get_recommendations_for_query(
     qp: QueryParser,
     retriever: AssessmentRetriever,
     reranker: AssessmentReranker,
-    top_k: int = 20,
+    top_k: int = 10,
 ) -> List[Dict[str, Any]]:
     """Run full pipeline (LLM parse -> retrieve -> rerank) for a single query."""
     analysis = qp.parse_query(query)
@@ -52,7 +52,7 @@ def main():
     reranker = AssessmentReranker()
     qp = QueryParser()
 
-    output_path = "submission.csv"
+    output_path = "chagamu_kavya.csv"
     with open(output_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         # EXACT headers required by Appendix 3
@@ -65,7 +65,7 @@ def main():
 
             logger.info("Generating recommendations for query: %s", query_text)
             recs = get_recommendations_for_query(
-                query_text, qp, retriever, reranker, top_k=20  # Get top 20 recommendations
+                query_text, qp, retriever, reranker, top_k=10  # Get top 10 recommendations
             )
 
             # One row per recommendation (same Query text, different URLs)
@@ -80,5 +80,82 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+    test_df = pd.read_csv("data/test_data.csv")
+
+    if "Query" not in test_df.columns:
+
+        raise ValueError("Expected a 'Query' column in data/test_data.csv")
+
+
+
+    retriever = AssessmentRetriever()
+
+    reranker = AssessmentReranker()
+
+    qp = QueryParser()
+
+
+
+    output_path = "submission.csv"
+
+    with open(output_path, "w", newline="", encoding="utf-8") as f:
+
+        writer = csv.writer(f)
+
+        # EXACT headers required by Appendix 3
+
+        writer.writerow(["Query", "Assessment_url"])
+
+
+
+        for _, row in test_df.iterrows():
+
+            query_text = str(row["Query"])
+
+            if not query_text or query_text.strip() == "":
+
+                continue
+
+
+
+            logger.info("Generating recommendations for query: %s", query_text)
+
+            recs = get_recommendations_for_query(
+
+                query_text, qp, retriever, reranker, top_k=20  # Get top 20 recommendations
+            )
+
+
+
+            # One row per recommendation (same Query text, different URLs)
+
+            for r in recs:
+
+                url = r.get("url") or r.get("assessment_url") or ""
+
+                if not url:
+
+                    continue
+
+                writer.writerow([query_text, url])
+
+
+
+    logger.info("Saved submission CSV to %s", output_path)
+
+
+
+
+
+if __name__ == "__main__":
+
+    main()
+
+
+
+
 
 

@@ -49,25 +49,66 @@ class AssessmentRetriever:
         
         for idx, assessment in enumerate(self.assessments):
             # Extract keywords from name and description
-            text = f"{assessment['name']} {assessment['description']}".lower()
+            text = f"{assessment['name']} {assessment.get('description', '')}".lower()
+            
+            # Extract regular words
             words = re.findall(r'\b\w+\b', text)
             
+            # Also extract technology names (C++, C#, etc.)
+            tech_terms = re.findall(r'c\+\+|cpp|c#|csharp|\.net|dotnet|node\.js|nodejs', text)
+            words.extend(tech_terms)
+            
             for word in set(words):
-                if len(word) > 3:  # Ignore very short words
+                if len(word) > 2:  # Include shorter tech terms
                     if word not in self.keyword_index:
                         self.keyword_index[word] = []
                     self.keyword_index[word].append(idx)
     
     def _keyword_search(self, query: str, k: int = 50) -> List[int]:
         """
-        Find assessments using keyword matching
+        Find assessments using keyword matching with exact technology boost
         
         Returns:
             List of assessment indices sorted by keyword match count
         """
-        query_words = set(re.findall(r'\b\w+\b', query.lower()))
+        query_lower = query.lower()
+        
+        # Extract programming languages and technologies (including special chars)
+        tech_patterns = [
+            r'c\+\+', r'cpp', r'cplusplus',
+            r'c#', r'csharp',
+            r'\.net', r'dotnet',
+            r'node\.js', r'nodejs',
+            r'javascript', r'js\b',
+            r'typescript', r'ts\b',
+            r'python', r'java\b', r'sql\b', r'html\b', r'css\b',
+            r'ruby', r'go\b', r'golang', r'rust', r'swift', r'kotlin', r'scala', r'php\b',
+            r'react', r'angular', r'vue\b'
+        ]
+        
+        # Find technology matches in query
+        query_technologies = []
+        for pattern in tech_patterns:
+            if re.search(pattern, query_lower):
+                tech_name = pattern.replace(r'\b', '').replace(r'\.', '.').replace('+', '\\+').replace('#', '\\#')
+                query_technologies.append(tech_name)
+        
+        # Extract regular words
+        query_words = set(re.findall(r'\b\w+\b', query_lower))
         match_counts = Counter()
         
+        # Boost exact technology matches significantly
+        for tech in query_technologies:
+            tech_clean = tech.replace('\\', '').replace('+', '').replace('#', '').replace('.', '')
+            # Search in assessment names and descriptions
+            for idx, assessment in enumerate(self.assessments):
+                text = f"{assessment['name']} {assessment.get('description', '')}".lower()
+                if re.search(tech, text, re.IGNORECASE):
+                    match_counts[idx] += 10  # High boost for exact tech match
+                elif tech_clean in text:
+                    match_counts[idx] += 5   # Medium boost for partial match
+        
+        # Regular keyword matching
         for word in query_words:
             if word in self.keyword_index:
                 for idx in self.keyword_index[word]:
@@ -121,7 +162,10 @@ class AssessmentRetriever:
         # Keyword-based detection as fallback
         technical_keywords = [
             'java', 'python', 'javascript', 'sql', 'coding', 'programming',
-            'technical', 'developer', 'engineer', 'excel', 'data analysis'
+            'technical', 'developer', 'engineer', 'excel', 'data analysis',
+            'c++', 'cpp', 'cplusplus', 'c#', 'csharp', '.net', 'dotnet',
+            'ruby', 'go', 'golang', 'rust', 'swift', 'kotlin', 'scala',
+            'php', 'html', 'css', 'react', 'angular', 'vue', 'node.js'
         ]
         
         soft_keywords = [
