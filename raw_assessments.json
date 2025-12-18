@@ -1,0 +1,149 @@
+[
+  {
+    "name": "Java Programming Test",
+    "url": "https://www.shl.com/solutions/products/java-programming-test/",
+    "description": "Comprehensive assessment of Java programming skills including OOP concepts, data structures, algorithms, and problem-solving abilities. Tests knowledge of Java syntax, design patterns, and best practices.",
+    "test_type": "K",
+    "category": "Technical Skills"
+  },
+  {
+    "name": "Python Coding Assessment",
+    "url": "https://www.shl.com/solutions/products/python-coding-assessment/",
+    "description": "Evaluate Python programming capabilities including scripting, data manipulation, libraries, and algorithmic thinking. Covers Python fundamentals, data structures, and practical coding challenges.",
+    "test_type": "K",
+    "category": "Technical Skills"
+  },
+  {
+    "name": "JavaScript Development Test",
+    "url": "https://www.shl.com/solutions/products/javascript-test/",
+    "description": "Assessment of JavaScript skills including ES6+, async programming, DOM manipulation, and modern frameworks. Tests understanding of closures, promises, and event handling.",
+    "test_type": "K",
+    "category": "Technical Skills"
+  },
+  {
+    "name": "SQL Database Assessment",
+    "url": "https://www.shl.com/solutions/products/sql-assessment/",
+    "description": "Test SQL query writing, database design, joins, subqueries, and data manipulation. Evaluates knowledge of relational databases and optimization techniques.",
+    "test_type": "K",
+    "category": "Technical Skills"
+  },
+  {
+    "name": "Excel Data Analysis",
+    "url": "https://www.shl.com/solutions/products/excel-assessment/",
+    "description": "Advanced Excel skills including formulas, pivot tables, data visualization, macros, and VBA. Tests ability to analyze and present data effectively.",
+    "test_type": "K",
+    "category": "Technical Skills"
+  },
+  {
+    "name": "Coding Challenge",
+    "url": "https://www.shl.com/solutions/products/coding-challenge/",
+    "description": "Real-world coding problems to assess algorithmic thinking, code quality, and problem-solving. Language-agnostic evaluation of programming fundamentals.",
+    "test_type": "K",
+    "category": "Technical Skills"
+  },
+  {
+    "name": "Technical Skills Assessment",
+    "url": "https://www.shl.com/solutions/products/technical-skills-assessment/",
+    "description": "Comprehensive evaluation of technical competencies across multiple domains. Customizable to specific technical roles and requirements.",
+    "test_type": "K",
+    "category": "Technical Skills"
+  },
+  {
+    "name": "Data Analysis Test",
+    "url": "https://www.shl.com/solutions/products/data-analysis-test/",
+    "description": "Assess ability to interpret data, identify patterns, and make data-driven decisions. Covers statistical analysis and data visualization.",
+    "test_type": "K",
+    "category": "Technical Skills"
+  },
+  {
+    "name": "Verify Numerical Reasoning",
+    "url": "https://www.shl.com/solutions/products/verify-numerical-reasoning/",
+    "description": "Measure numerical reasoning abilities through data interpretation, mathematical problem-solving, and quantitative analysis. Industry-standard cognitive assessment.",
+    "test_type": "C",
+    "category": "Cognitive Abilities"
+  },
+  {
+    "name": "Verify Verbal Reasoning",
+    "url": "https://www.shl.com/solutions/products/verify-verbal-reasoning/",
+    "description": "Assess verbal reasoning through comprehension and critical analysis of written information. Evaluates ability to understand and evaluate text-based arguments.",
+    "test_type": "C",
+    "category": "Cognitive Abilities"
+  },
+  {
+    "name": "Verify Inductive Reasoning",
+    "url": "https://www.shl.com/solutions/products/verify-inductive-reasoning/",
+    "description": "Measure abstract reasoning and pattern recognition abilities. Tests capacity to identify rules and relationships in visual and abstract information.",
+    "test_type": "C",
+    "category": "Cognitive Abilities"
+  },
+  {
+    "name": "Verify Deductive Reasoning",
+    "url": "https://www.shl.com/solutions/products/verify-deductive-reasoning/",
+    "description": "Evaluate logical thinking and deductive reasoning skills. Assesses ability to draw conclusions from given premises.",
+    "test_type": "C",
+    "category": "Cognitive Abilities"
+  },
+  {
+    "name": "Verify Interactive",
+    "url": "https://www.shl.com/solutions/products/verify-interactive/",
+    "description": "Modern adaptive cognitive assessment combining multiple reasoning types. Engaging, game-based evaluation of cognitive abilities.",
+    "test_type": "C",
+    "category": "Cognitive Abilities"
+  },
+  {
+    "name": "OPQ32 Personality Assessment",
+    "url": "https://www.shl.com/solutions/products/opq32/",
+    "description": "Comprehensive personality assessment measuring 32 personality characteristics relevant to workplace behavior. Industry-leading tool for understanding work style and preferences.",
+    "test_type": "P",
+    "category": "Personality & Behavior"
+  },
+  {
+    "name": "Teamwork and Collaboration Assessment",
+    "url": "https://www.shl.com/solutions/products/teamwork-collaboration/",
+    "description": "Evaluate ability to work effectively in teams, collaborate with stakeholders, and contribute to group success. Measures interpersonal effectiveness.",
+    "test_type": "P",
+    "category": "Personality & Behavior"
+  },
+  {
+    "name": "Leadership Assessment",
+    "url": "https://www.shl.com/solutions/products/leadership-assessment/",
+    "description": "Measure leadership qualities, decision-making abilities, people management skills, and strategic thinking. Identifies leadership potential and development needs.",
+    "test_type": "P",
+    "category": "Personality & Behavior"
+  },
+  {
+    "name": "Customer Service Assessment",
+    "url": "https://www.shl.com/solutions/products/customer-service-assessment/",
+    "description": "Evaluate customer service orientation, empathy, problem-solving in customer interactions, and service mindset. Predicts customer satisfaction performance.",
+    "test_type": "P",
+    "category": "Personality & Behavior"
+  },
+  {
+    "name": "Sales Assessment",
+    "url": "https://www.shl.com/solutions/products/sales-assessment/",
+    "description": "Assess sales competencies including persuasion, relationship building, resilience, and achievement orientation. Identifies top sales performers.",
+    "test_type": "P",
+    "category": "Personality & Behavior"
+  },
+  {
+    "name": "Management Judgement",
+    "url": "https://www.shl.com/solutions/products/management-judgement/",
+    "description": "Evaluate managerial decision-making, judgment in workplace scenarios, and leadership approach. Situational assessment for management roles.",
+    "test_type": "P",
+    "category": "Personality & Behavior"
+  },
+  {
+    "name": "Situational Judgement Test",
+    "url": "https://www.shl.com/solutions/products/situational-judgement-test/",
+    "description": "Assess how candidates handle realistic workplace situations. Measures behavioral competencies and decision-making in context.",
+    "test_type": "P",
+    "category": "Personality & Behavior"
+  },
+  {
+    "name": "Creativity Assessment",
+    "url": "https://www.shl.com/solutions/products/creativity-assessment/",
+    "description": "Measure creative thinking, innovation, and ability to generate novel solutions. Evaluates divergent thinking and creative problem-solving.",
+    "test_type": "P",
+    "category": "Personality & Behavior"
+  }
+]

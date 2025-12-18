@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHL Assessment Recommendation System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 50%, #14b8a6 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 25px 70px rgba(14, 165, 233, 0.15);
+            max-width: 1200px;
+            width: 100%;
+            padding: 40px;
+            border: 1px solid rgba(14, 165, 233, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            background: linear-gradient(135deg, #0ea5e9 0%, #f97316 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .search-section {
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        #queryInput {
+            flex: 1;
+            padding: 15px 20px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #queryInput:focus {
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        }
+
+        #searchButton {
+            padding: 15px 40px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        #searchButton:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(249, 115, 22, 0.5);
+            background: linear-gradient(135deg, #ea580c 0%, #dc2626 100%);
+        }
+
+        #searchButton:active {
+            transform: translateY(0);
+        }
+
+        #searchButton:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .example-queries {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .example-tag {
+            padding: 8px 15px;
+            background: #f0fdfa;
+            border: 1px solid #ccfbf1;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #0f766e;
+        }
+
+        .example-tag:hover {
+            background: #0ea5e9;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #0ea5e9;
+            font-size: 18px;
+            display: none;
+        }
+
+        .spinner {
+            border: 4px solid #e0f2fe;
+            border-top: 4px solid #0ea5e9;
+            border-right: 4px solid #f97316;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results-section {
+            display: none;
+        }
+
+        .results-header {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .results-header h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .query-display {
+            color: #0ea5e9;
+            font-style: italic;
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .results-table th {
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .results-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .results-table tr:hover {
+            background: #f0fdfa;
+            transform: scale(1.01);
+            transition: all 0.2s ease;
+        }
+
+        .assessment-name {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .assessment-link {
+            color: #0ea5e9;
+            text-decoration: none;
+            font-size: 14px;
+            word-break: break-all;
+            transition: color 0.2s;
+        }
+
+        .assessment-link:hover {
+            color: #f97316;
+            text-decoration: underline;
+        }
+
+        .visit-button {
+            padding: 8px 20px;
+            background: #f97316;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        .visit-button:hover {
+            background: #ea580c;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+        }
+
+        .error-message {
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+            border-left: 4px solid #dc2626;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .badge-rank {
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+            color: white;
+            box-shadow: 0 2px 6px rgba(14, 165, 233, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .search-box {
+                flex-direction: column;
+            }
+
+            #searchButton {
+                width: 100%;
+            }
+
+            .results-table {
+                font-size: 14px;
+            }
+
+            .results-table th,
+            .results-table td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 SHL Assessment Recommender</h1>
+            <p>Find the perfect assessments for your hiring needs</p>
+        </div>
+
+        <div class="search-section">
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    id="queryInput" 
+                    placeholder="Enter job description or search query..."
+                    onkeypress="if(event.key === 'Enter') searchAssessments()"
+                />
+                <button id="searchButton" onclick="searchAssessments()">
+                    Search
+                </button>
+            </div>
+
+            <div class="example-queries">
+                <span style="color: #666; margin-right: 10px;">Try:</span>
+                <div class="example-tag" onclick="useExample(0)">
+                    Java developer with collaboration skills
+                </div>
+                <div class="example-tag" onclick="useExample(1)">
+                    Python and SQL proficiency
+                </div>
+                <div class="example-tag" onclick="useExample(2)">
+                    Cognitive and personality tests
+                </div>
+                <div class="example-tag" onclick="useExample(3)">
+                    Leadership assessment for managers
+                </div>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Finding the best assessments for you...</p>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="results-section" id="resultsSection">
+            <div class="results-header">
+                <h2>Recommended Assessments</h2>
+                <div class="query-display" id="queryDisplay"></div>
+            </div>
+
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">#</th>
+                        <th>Assessment Details</th>
+                        <th style="width: 120px; text-align: center;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';  // Change this to your deployed API URL
+        
+        const examples = [
+            "I am hiring for Java developers who can also collaborate effectively with my business teams.",
+            "Looking to hire mid-level professionals who are proficient in Python, SQL and JavaScript.",
+            "Here is a JD text, can you recommend some assessment that can help me screen applications. I am hiring for an analyst and wants applications to screen using Cognitive and personality tests",
+            "Need leadership assessment for senior management positions"
+        ];
+
+        function useExample(index) {
+            document.getElementById('queryInput').value = examples[index];
+            searchAssessments();
+        }
+
+        async function searchAssessments() {
+            const query = document.getElementById('queryInput').value.trim();
+            
+            if (!query) {
+                showError('Please enter a search query');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('resultsSection').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('searchButton').disabled = true;
+
+            try {
+                const response = await fetch(`${API_URL}/recommend`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query: query })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to fetch recommendations');
+                }
+
+                const data = await response.json();
+                displayResults(data);
+
+            } catch (error) {
+                showError(`Error: ${error.message}. Make sure the API is running at ${API_URL}`);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('searchButton').disabled = false;
+            }
+        }
+
+        function displayResults(data) {
+            const resultsBody = document.getElementById('resultsBody');
+            resultsBody.innerHTML = '';
+
+            document.getElementById('queryDisplay').textContent = `"${data.query}"`;
+
+            data.recommendations.forEach((assessment, index) => {
+                const row = document.createElement('tr');
+                const name = assessment.name || assessment.assessment_name || 'Unknown Assessment';
+                const url = assessment.url || assessment.assessment_url || '#';
+                const description = assessment.description || '';
+                const duration = assessment.duration || '';
+                const testType = assessment.test_type || [];
+                
+                row.innerHTML = `
+                    <td>
+                        <span class="badge badge-rank">#${index + 1}</span>
+                    </td>
+                    <td>
+                        <div class="assessment-name">${escapeHtml(name)}</div>
+                        ${description ? `<div style="color: #666; font-size: 14px; margin: 8px 0; line-height: 1.5;">${escapeHtml(description)}</div>` : ''}
+                        ${duration ? `<div style="color: #0ea5e9; font-size: 12px; margin-top: 5px;"><strong>Duration:</strong> ${escapeHtml(duration)}</div>` : ''}
+                        ${testType.length > 0 ? `<div style="color: #14b8a6; font-size: 12px; margin-top: 3px;"><strong>Type:</strong> ${escapeHtml(testType.join(', '))}</div>` : ''}
+                        <a href="${escapeHtml(url)}" 
+                           target="_blank" 
+                           class="assessment-link" 
+                           style="display: block; margin-top: 8px;">
+                            ${escapeHtml(url)}
+                        </a>
+                    </td>
+                    <td style="text-align: center;">
+                        <button class="visit-button" onclick="window.open('${escapeHtml(url)}', '_blank')">
+                            Visit →
+                        </button>
+                    </td>
+                `;
+                resultsBody.appendChild(row);
+            });
+
+            document.getElementById('resultsSection').style.display = 'block';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Check API health on load
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                if (response.ok) {
+                    console.log('✓ API is healthy');
+                } else {
+                    console.warn('⚠ API health check failed');
+                }
+            } catch (error) {
+                console.warn('⚠ Could not connect to API:', error);
+            }
+        });
+    </script>
+</body>
+</html>

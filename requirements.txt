@@ -1,0 +1,11 @@
+pandas
+openpyxl
+sentence-transformers>=2.2.0
+faiss-cpu
+fastapi
+uvicorn
+google-generativeai
+requests
+beautifulsoup4
+torch>=2.0.0
+transformers>=4.30.0
