@@ -354,7 +354,10 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:8000';  // Change this to your deployed API URL
+        // API URL - automatically detects production or uses localhost
+        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:8000'
+            : window.location.origin;  // Use same origin in production
         
         const examples = [
             "I am hiring for Java developers who can also collaborate effectively with my business teams.",

@@ -4,6 +4,7 @@ FastAPI Backend for SHL Assessment Recommendation System
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from typing import List, Optional
 import sys
@@ -403,6 +404,17 @@ async def not_found_handler(request, exc):
         "message": "The requested endpoint does not exist",
         "available_endpoints": ["/health", "/recommend", "/docs"]
     }
+
+
+# Serve frontend static files (optional - for production deployment)
+# Uncomment the following lines if you want to serve frontend from the same domain
+try:
+    frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
+    if os.path.exists(frontend_path):
+        app.mount("/", StaticFiles(directory=frontend_path, html=True), name="static")
+        logger.info("Frontend static files mounted at root")
+except Exception as e:
+    logger.warning(f"Could not mount frontend static files: {e}")
 
 
 if __name__ == "__main__":

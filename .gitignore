@@ -44,8 +44,10 @@ embeddings/*.pkl
 *.xlsx
 *.xls
 
-# API Keys (if stored in files)
+# API Keys and Environment Variables
 .env
+.env.local
+.env.production
 *.key
 *.pem
 
