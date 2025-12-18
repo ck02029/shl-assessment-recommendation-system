@@ -10,7 +10,12 @@ Each test query is repeated once per recommended assessment URL.
 
 import csv
 import logging
+import sys
+import os
 from typing import List, Dict, Any
+
+# Add parent directory to path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pandas as pd
 
@@ -28,7 +33,7 @@ def get_recommendations_for_query(
     qp: QueryParser,
     retriever: AssessmentRetriever,
     reranker: AssessmentReranker,
-    top_k: int = 10,
+    top_k: int = 20,
 ) -> List[Dict[str, Any]]:
     """Run full pipeline (LLM parse -> retrieve -> rerank) for a single query."""
     analysis = qp.parse_query(query)
@@ -60,7 +65,7 @@ def main():
 
             logger.info("Generating recommendations for query: %s", query_text)
             recs = get_recommendations_for_query(
-                query_text, qp, retriever, reranker, top_k=10
+                query_text, qp, retriever, reranker, top_k=20  # Get top 20 recommendations
             )
 
             # One row per recommendation (same Query text, different URLs)
