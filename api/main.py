@@ -5,6 +5,7 @@ FastAPI Backend for SHL Assessment Recommendation System
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel, Field
 from typing import List, Optional
 import sys
@@ -363,18 +364,31 @@ async def recommend_assessments(request: RecommendationRequest):
         )
 
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root():
-    """Root endpoint with API information"""
-    return {
-        "name": "SHL Assessment Recommendation API",
-        "version": "1.0.0",
-        "endpoints": {
-            "health": "/health",
-            "recommend": "/recommend (POST)",
-            "docs": "/docs"
-        }
-    }
+    """Serve frontend HTML at root"""
+    frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend", "index.html")
+    if os.path.exists(frontend_path):
+        return FileResponse(frontend_path)
+    else:
+        # Fallback: return API info if frontend not found
+        return HTMLResponse(content="""
+        <!DOCTYPE html>
+        <html>
+        <head><title>SHL Recommendation API</title></head>
+        <body>
+            <h1>SHL Assessment Recommendation API</h1>
+            <p>Version 1.0.0</p>
+            <h2>Endpoints:</h2>
+            <ul>
+                <li><a href="/health">/health</a> - Health check</li>
+                <li><a href="/docs">/docs</a> - API Documentation</li>
+                <li>/recommend (POST) - Get recommendations</li>
+            </ul>
+            <p><strong>Note:</strong> Frontend not found. Please ensure frontend/index.html exists.</p>
+        </body>
+        </html>
+        """)
 
 
 @app.get("/stats")
@@ -406,13 +420,13 @@ async def not_found_handler(request, exc):
     }
 
 
-# Serve frontend static files (optional - for production deployment)
-# Uncomment the following lines if you want to serve frontend from the same domain
+# Mount static files for frontend assets (CSS, JS, etc.)
 try:
     frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
     if os.path.exists(frontend_path):
-        app.mount("/", StaticFiles(directory=frontend_path, html=True), name="static")
-        logger.info("Frontend static files mounted at root")
+        # Mount static assets (but not index.html, which is served by root route)
+        app.mount("/static", StaticFiles(directory=frontend_path), name="static")
+        logger.info(f"Frontend static assets mounted at /static from {frontend_path}")
 except Exception as e:
     logger.warning(f"Could not mount frontend static files: {e}")
 
